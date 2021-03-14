@@ -4,6 +4,7 @@ import ilog.cplex.*;
 import ilog.concert.*;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 public class IPInstance {
     // IBM Ilog Cplex Solver
@@ -36,6 +37,19 @@ public class IPInstance {
         for (int i = 0; i < numTests; i++)
             for (int j = 0; j < numDiseases; j++)
                 this.A[i][j] = A[i][j];
+    }
+
+    public Optional<Integer> solve() {
+        Optional<Float> solution = solveLinear();
+        if (solution.isPresent()) {
+            return Optional.of((int) Math.ceil(solution.get()));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Float> solveLinear() {
+        return Optional.empty();
     }
 
     public String toString() {

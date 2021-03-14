@@ -2,6 +2,7 @@ package solver.ip;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 public class Main {
     public static void main(String[] args) {
@@ -24,9 +25,14 @@ public class Main {
 		 */
 
         IPInstance instance = DataParser.parseIPFile(input);
-        System.out.println(instance);
+        Optional<Integer> solution = instance.solve();
 
         watch.stop();
-        System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: N/A" + " Solution: N/A");
+
+        if (solution.isPresent()) {
+            System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: " + solution.get() + " Solution: OPT");
+        } else {
+            System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: --" + " Solution: FAIL");
+        }
     }
 }
