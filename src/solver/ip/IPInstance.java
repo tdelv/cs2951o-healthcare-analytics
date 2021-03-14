@@ -15,6 +15,14 @@ public class IPInstance {
     double[] costOfTest;  // [numTests] the cost of each test
     int[][] A;            // [numTests][numDiseases] 0/1 matrix if test is positive for disease
 
+    SolveType solveType = SolveType.solveFloat;
+    IloNumVarType varType = IloNumVarType.Float;
+
+    enum SolveType {
+        solveFloat,
+        solveInt
+    }
+
     public IPInstance() {
         super();
     }
@@ -40,12 +48,32 @@ public class IPInstance {
     }
 
     public Optional<Integer> solve() {
-        Optional<Float> solution = solveLinear();
+        switch (solveType) {
+            case solveFloat:
+                varType = IloNumVarType.Float;
+                break;
+            case solveInt:
+                varType = IloNumVarType.Int;
+                break;
+            default:
+                System.err.println("Invalid solveType: " + solveType);
+                System.exit(1);
+        }
+
+        /*
+            Setup recursion here!
+         */
+
+        Optional<Float> solution = solveRecursive();
         if (solution.isPresent()) {
             return Optional.of((int) Math.ceil(solution.get()));
         } else {
             return Optional.empty();
         }
+    }
+
+    private Optional<Float> solveRecursive() {
+        return solveLinear();
     }
 
     private Optional<Float> solveLinear() {

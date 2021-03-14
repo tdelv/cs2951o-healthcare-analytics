@@ -19,12 +19,13 @@ public class Main {
 
         Timer watch = new Timer();
         watch.start();
+        IPInstance instance = DataParser.parseIPFile(input);
 
 		/*
 			Parse command line args here!
 		 */
+        instance.solveType = IPInstance.SolveType.valueOf(parser.switchValue("-solveType", "solveFloat"));
 
-        IPInstance instance = DataParser.parseIPFile(input);
         Optional<Integer> solution = instance.solve();
 
         watch.stop();
