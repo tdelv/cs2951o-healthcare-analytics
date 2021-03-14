@@ -12,6 +12,8 @@ public class Main
 			System.out.println("Usage: java Main <file>");
 			return;
 		}
+
+		CliArgs parser = new CliArgs(args);
 		
 		String input = args[0];
 		Path path = Paths.get(input);
@@ -19,7 +21,11 @@ public class Main
 
 		Timer watch = new Timer();
 		watch.start();
-		
+
+		/*
+			Parse command line args here!
+		 */
+
 		IPInstance instance = DataParser.parseIPFile(input);
 		System.out.println(instance);
     
