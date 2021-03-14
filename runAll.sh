@@ -4,7 +4,7 @@
 ############# CSCI 2951-O ##############
 ########################################
 E_BADARGS=65
-if [ $# -ne 3 ]
+if [ $# -le 2 ]
 then
 	echo "Usage: `basename $0` <inputFolder/> <timeLimit> <logFile>"
 	echo "Description:"
@@ -20,6 +20,7 @@ fi
 inputFolder=$1
 timeLimit=$2
 logFile=$3
+args="${@:4}"
 
 # Append slash to the end of inputFolder if it does not have it
 lastChar="${inputFolder: -1}"
@@ -37,7 +38,7 @@ touch $logFile
 for f in $inputFolder*.*
 do
 	echo "Running $f"
-	timeout $timeLimit ./run.sh $f > output.tmp
+	timeout $timeLimit ./run.sh $f $args > output.tmp
 	returnValue="$?"
 	if [[ "$returnValue" = 0 ]]; then 						# Run is successful
 		cat output.tmp | tail -1 >> $logFile				# Record the last line as solution
