@@ -47,7 +47,7 @@ public class IPInstance {
                 this.A[i][j] = A[i][j];
     }
 
-    public Optional<Integer> solve() {
+    public Optional<Integer> solve() throws IloException {
         switch (solveType) {
             case solveFloat:
                 varType = IloNumVarType.Float;
@@ -64,7 +64,7 @@ public class IPInstance {
             Setup recursion here!
          */
 
-        Optional<Float> solution = solveRecursive();
+        Optional<Double> solution = solveRecursive();
         if (solution.isPresent()) {
             return Optional.of((int) Math.ceil(solution.get()));
         } else {
@@ -72,12 +72,19 @@ public class IPInstance {
         }
     }
 
-    private Optional<Float> solveRecursive() {
+    private Optional<Double> solveRecursive() throws IloException {
         return solveLinear();
     }
 
-    private Optional<Float> solveLinear() {
-        return Optional.empty();
+    private Optional<Double> solveLinear() throws IloException {
+        IloCplex cplex = new IloCplex();
+        IloNumVar[] useTest = cplex.numVarArray(numTests, 0, 1, varType);
+
+        if (cplex.solve()) {
+            return Optional.of(cplex.getObjValue());
+        } else {
+            return Optional.empty();
+        }
     }
 
     public String toString() {

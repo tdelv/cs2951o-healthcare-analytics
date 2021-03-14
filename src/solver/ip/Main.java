@@ -26,14 +26,18 @@ public class Main {
 		 */
         instance.solveType = IPInstance.SolveType.valueOf(parser.switchValue("-solveType", "solveFloat"));
 
-        Optional<Integer> solution = instance.solve();
+        try {
+            Optional<Integer> solution = instance.solve();
 
-        watch.stop();
+            watch.stop();
 
-        if (solution.isPresent()) {
-            System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: " + solution.get() + " Solution: OPT");
-        } else {
-            System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: --" + " Solution: FAIL");
+            if (solution.isPresent()) {
+                System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: " + solution.get() + " Solution: OPT");
+            } else {
+                System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: --" + " Solution: FAIL");
+            }
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
         }
     }
 }
