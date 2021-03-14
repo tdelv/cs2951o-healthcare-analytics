@@ -15,34 +15,29 @@ import java.util.Scanner;
  * . . . . . . . . . . . . . .
  * A(n,1) A(n,2) . . . A(n, m)
  */
-public class DataParser
-{
-  public static IPInstance parseIPFile(String fileName)
-  {
-    IPInstance instance = new IPInstance();
-    try
-    {
-      Scanner read = new Scanner(new File(fileName));
-      
-      int numTests = read.nextInt();  // n
-      int numDiseases = read.nextInt();  // m
-      
-      double[] costOfTest = new double[numTests];
-      for(int i=0; i < costOfTest.length; i++)
-        costOfTest[i] = read.nextDouble();
-      
-      int[][] A = new int[numTests][numDiseases];
-      for(int i=0; i < numTests; i++)
-        for(int j=0; j < numDiseases; j++)
-          A[i][j] = read.nextInt();
-      
-      // Initialize the instance
-      instance.init(numTests, numDiseases, costOfTest, A);
+public class DataParser {
+    public static IPInstance parseIPFile(String fileName) {
+        IPInstance instance = new IPInstance();
+        try {
+            Scanner read = new Scanner(new File(fileName));
+
+            int numTests = read.nextInt();  // n
+            int numDiseases = read.nextInt();  // m
+
+            double[] costOfTest = new double[numTests];
+            for (int i = 0; i < costOfTest.length; i++)
+                costOfTest[i] = read.nextDouble();
+
+            int[][] A = new int[numTests][numDiseases];
+            for (int i = 0; i < numTests; i++)
+                for (int j = 0; j < numDiseases; j++)
+                    A[i][j] = read.nextInt();
+
+            // Initialize the instance
+            instance.init(numTests, numDiseases, costOfTest, A);
+        } catch (FileNotFoundException e) {
+            System.out.println("Error: file not found " + fileName);
+        }
+        return instance;
     }
-    catch (FileNotFoundException e)
-    {
-      System.out.println("Error: file not found " + fileName);
-    }
-    return instance;
-  }
 }
