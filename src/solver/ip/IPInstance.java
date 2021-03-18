@@ -109,6 +109,15 @@ public class IPInstance {
                         // If the test is different, then testDiffers > 0
                         cplex.addGe(testDiffers, testCompare); // slack
                         cplex.addGe(testDiffers, cplex.prod(testCompare, -1)); // slack
+                        // but doesn't make sure that testDiffers = 0 if isDifferent = 0
+
+                        if (isDifferent > 0) {
+                            cplex.add(cplex.eq(testDiffers, 1));
+                        } else if (isDifferent < 0) {
+                            cplex.add(cplex.eq(testDiffers, 1));
+                        } else {
+                            cplex.add(cplex.eq(testDiffers, 0));
+                        }
 
                         // Makes sures that test is used
                         cplex.addGe(useTest[t], testDiffers); // slack
