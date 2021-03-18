@@ -80,6 +80,50 @@ public class IPInstance {
         IloCplex cplex = new IloCplex();
         IloNumVar[] useTest = cplex.numVarArray(numTests, 0, 1, varType);
 
+        /*
+            int numTests;            // number of tests
+            int numDiseases;        // number of diseases
+            double[] costOfTest;  // [numTests] the cost of each test
+            int[][] A;            // [numTests][numDiseases] 0/1 matrix if test is positive for disease
+         */
+
+        /*
+            For each pair of disease d1, d2:
+                Check that there is some test t for which A[t][d1] != A[t][d2] (and useTest[t] = 1)
+
+            Forall d1, d2, Exists t | (A[t][d1] != A[t][d2] and useTest[t] = 1)
+         */
+
+        for (int d1 = 0; d1 < numDiseases; d1 ++) {
+            for (int d2 = 0; d2 < numDiseases; d2 ++) {
+                if (d1 != d2) {
+                    IloNumExpr differs[] = new IloNumExpr[numTests];
+                    for (int t = 0; t < numTests; t++) {
+                        IloNumVar testDiffers = cplex.numVar(0, 1, varType);
+                        cplex.addGe(useTest[t], testDiffers); // slack
+
+                        differs[t] = testDiffers;
+                    }
+                    cplex.addGe(cplex.sum(differs), 1);
+                }
+            }
+        }
+
+        IloNumExpr totalCost = cplex.scalProd(useTest, costOfTest);
+        cplex.addMinimize(totalCost);
+
+
+        if (cplex.solve()) {
+            return Optional.of(cplex.getObjValue());
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Double> solveDual() throws IloException {
+        IloCplex cplex = new IloCplex();
+        IloNumVar[] useTest = cplex.numVarArray(numTests, 0, 1, varType);
+
         if (cplex.solve()) {
             return Optional.of(cplex.getObjValue());
         } else {
