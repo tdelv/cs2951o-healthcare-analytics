@@ -117,6 +117,13 @@ public class IPInstance {
                 }
             }
             System.out.println();
+            System.out.print("Cost of tests:");
+            for (int i = 0; i < numTests; i ++) {
+                if (cplex.getValue(useTest[i]) == 1) {
+                    System.out.print(" " + costOfTest[i]);
+                }
+            }
+            System.out.println();
             for (int d1 = 0; d1 < numDiseases - 1; d1 ++) {
                 for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
                     boolean differed = false;
