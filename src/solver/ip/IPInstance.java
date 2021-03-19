@@ -99,34 +99,23 @@ public class IPInstance {
 
                     IloNumExpr differs[] = new IloNumExpr[numTests];
                     for (int t = 0; t < numTests; t++) {
-                        // If there is a test that differs for the two diseases
-                        IloNumVar testDiffers = cplex.numVar(0, 1, varType);
+                        int isDifferent = Math.abs(A[t][d1] - A[t][d2]);
 
-                        IloNumVar testCompare = cplex.numVar(0, 1, varType);
-                        int isDifferent = A[t][d1] - A[t][d2];
-                        cplex.add(cplex.eq(testCompare, isDifferent));
+                        /*
+                            If isDifferent is 0 then testDiffers is 0
+                            If testUsed is 0 then testDiffers is 0
+                            Otherwise testDiffers is 1
+                         */
 
-                        // If the test is different, then testDiffers > 0
-                        cplex.addGe(testDiffers, testCompare); // slack
-                        cplex.addGe(testDiffers, cplex.prod(testCompare, -1)); // slack
-                        // but doesn't make sure that testDiffers = 0 if isDifferent = 0
-
-                        if (isDifferent > 0) {
-                            cplex.add(cplex.eq(testDiffers, 1));
-                        } else if (isDifferent < 0) {
-                            cplex.add(cplex.eq(testDiffers, 1));
+                        if (isDifferent == 0) {
+                            differs[t] = cplex.numExpr();
                         } else {
-                            cplex.add(cplex.eq(testDiffers, 0));
+                            // Makes sures that test is used
+                            differs[t] = useTest[t];
                         }
-
-                        // Makes sures that test is used
-                        cplex.addGe(useTest[t], testDiffers); // slack
-
-
-                        differs[t] = testDiffers;
                     }
                     // Checks that there is at least one test that differs for the 2 diseases
-                    cplex.addGe(cplex.sum(differs), 1);
+                    cplex.addGe(cplex.sum(differs), 1); // slack
                 }
             }
         }
