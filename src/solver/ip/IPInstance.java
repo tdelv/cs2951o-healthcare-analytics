@@ -86,23 +86,21 @@ public class IPInstance {
             Forall d1, d2, Exists t | (A[t][d1] != A[t][d2] and useTest[t] = 1)
          */
 
-        for (int d1 = 0; d1 < numDiseases; d1 ++) {
-            for (int d2 = 0; d2 < numDiseases; d2 ++) {
-                if (d1 != d2) {
-                    IloNumExpr canDifferentiate = cplex.numExpr();
-                    for (int t = 0; t < numTests; t++) {
-                        /*
-                            If the test differentiates the two diseases,
-                            add it to canDifferentiate.
-                         */
+        for (int d1 = 0; d1 < numDiseases - 1; d1 ++) {
+            for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
+                IloNumExpr canDifferentiate = cplex.numExpr();
+                for (int t = 0; t < numTests; t++) {
+                    /*
+                        If the test differentiates the two diseases,
+                        add it to canDifferentiate.
+                     */
 
-                        if (A[t][d1] != A[t][d2]) {
-                            canDifferentiate = cplex.sum(canDifferentiate, useTest[t]);
-                        }
+                    if (A[t][d1] != A[t][d2]) {
+                        canDifferentiate = cplex.sum(canDifferentiate, useTest[t]);
                     }
-                    // Checks that there is at least one test that differs for the 2 diseases
-                    cplex.addGe(canDifferentiate, 1); // slack
                 }
+                // Checks that there is at least one test that differs for the 2 diseases
+                cplex.addGe(canDifferentiate, 1); // slack
             }
         }
 
@@ -112,6 +110,27 @@ public class IPInstance {
 
 
         if (cplex.solve()) {
+            System.out.print("Used tests:");
+            for (int i = 0; i < numTests; i ++) {
+                if (cplex.getValue(useTest[i]) == 1) {
+                    System.out.print(" " + i);
+                }
+            }
+            System.out.println();
+            for (int d1 = 0; d1 < numDiseases - 1; d1 ++) {
+                for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
+                    boolean differed = false;
+                    for (int t = 0; t < numTests; t ++) {
+                        if ((cplex.getValue(useTest[t]) == 1) && (A[t][d1] != A[t][d2])) {
+                            differed = true;
+                            System.out.println("Diseases " + d1 + " and " + d2 + " diff by test " + t);
+                        }
+                    }
+                    if (!differed) {
+                        System.out.println("Diseases " + d1 + " and " + d2 + " not differed :(");
+                    }
+                }
+            }
             return Optional.of(cplex.getObjValue());
         } else {
             return Optional.empty();
