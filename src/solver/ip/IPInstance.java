@@ -81,13 +81,6 @@ public class IPInstance {
         IloNumVar[] useTest = cplex.numVarArray(numTests, 0, 1, varType);
 
         /*
-            int numTests;            // number of tests
-            int numDiseases;        // number of diseases
-            double[] costOfTest;  // [numTests] the cost of each test
-            int[][] A;            // [numTests][numDiseases] 0/1 matrix if test is positive for disease
-         */
-
-        /*
             For each pair of disease d1, d2:
                 Check that there is some test t for which A[t][d1] != A[t][d2] (and useTest[t] = 1)
             Forall d1, d2, Exists t | (A[t][d1] != A[t][d2] and useTest[t] = 1)
@@ -96,30 +89,24 @@ public class IPInstance {
         for (int d1 = 0; d1 < numDiseases; d1 ++) {
             for (int d2 = 0; d2 < numDiseases; d2 ++) {
                 if (d1 != d2) {
-
-                    IloNumExpr differs[] = new IloNumExpr[numTests];
+                    IloNumExpr canDifferentiate = cplex.numExpr();
                     for (int t = 0; t < numTests; t++) {
-                        int isDifferent = Math.abs(A[t][d1] - A[t][d2]);
-
                         /*
-                            If isDifferent is 0 then testDiffers is 0
-                            If testUsed is 0 then testDiffers is 0
-                            Otherwise testDiffers is 1
+                            If the test differentiates the two diseases,
+                            add it to canDifferentiate.
                          */
 
-                        if (isDifferent == 0) {
-                            differs[t] = cplex.numExpr();
-                        } else {
-                            // Makes sures that test is used
-                            differs[t] = useTest[t];
+                        if (A[t][d1] != A[t][d2]) {
+                            canDifferentiate = cplex.sum(canDifferentiate, useTest[t]);
                         }
                     }
                     // Checks that there is at least one test that differs for the 2 diseases
-                    cplex.addGe(cplex.sum(differs), 1); // slack
+                    cplex.addGe(canDifferentiate, 1); // slack
                 }
             }
         }
 
+        // Get cost of used tests
         IloNumExpr totalCost = cplex.scalProd(useTest, costOfTest);
         cplex.addMinimize(totalCost);
 
