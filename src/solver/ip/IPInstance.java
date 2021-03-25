@@ -4,6 +4,8 @@ import ilog.cplex.*;
 import ilog.concert.*;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class IPInstance {
@@ -14,6 +16,8 @@ public class IPInstance {
     int numDiseases;        // number of diseases
     double[] costOfTest;  // [numTests] the cost of each test
     int[][] A;            // [numTests][numDiseases] 0/1 matrix if test is positive for disease
+
+    Optional<Double> minCost;
 
     SolveType solveType = SolveType.solveFloat;
     IloNumVarType varType = IloNumVarType.Float;
@@ -64,7 +68,10 @@ public class IPInstance {
             Setup recursion here!
          */
 
-        Optional<Double> solution = solveRecursive();
+        Map<Integer, Boolean> setTests = new HashMap<Integer, Boolean>();
+
+
+        Optional<Double> solution = solveRecursive(setTests);
         if (solution.isPresent()) {
             return Optional.of((int) Math.ceil(solution.get()));
         } else {
@@ -72,11 +79,57 @@ public class IPInstance {
         }
     }
 
-    private Optional<Double> solveRecursive() throws IloException {
-        return solveLinear();
+    private void solveRecursive(Map<Integer, Boolean> setTests) throws IloException {
+
+        // solve with setTests constraints
+
+        // can get:
+        // linear solution - check if we need to prune
+        // integer solution - check if we need to better or worse
+        // infeasible
+
+        Optional<SolveLinearReturn> linearResult = this.solveLinear(setTests);
+
+        // No best solution cost yet
+        if (!minCost.isPresent()) {
+            // Found an integer solution
+            if (linearResult.isPresent() && linearResult.get().isInteger) {
+                // Update best solution cost
+                minCost = Optional.of(linearResult.get().totalCost);
+            }
+        }
+        // Found another miscellaneous solution
+        if (linearResult.isPresent()) {
+            // Integer or float solution
+            boolean isInteger = linearResult.get().isInteger;
+            if (isInteger) {
+                if (linearResult.get().totalCost < minCost.get()) {
+                    // Update best solution cost
+                    minCost = Optional.of(linearResult.get().totalCost);
+                }
+
+            }
+            else {
+                if (linearResult.get().totalCost < minCost.get()) {
+                    // keep going
+                }
+            }
+        }
+
+        return;
     }
 
-    private Optional<Double> solveLinear() throws IloException {
+    private class SolveLinearReturn {
+        public double totalCost;
+        public boolean isInteger;
+
+        public SolveLinearReturn(double totalCost, boolean isInteger) {
+            this.totalCost = totalCost;
+            this.isInteger = isInteger;
+        }
+    }
+
+    private Optional<SolveLinearReturn> solveLinear(Map<Integer, Boolean> setTests) throws IloException {
         IloCplex cplex = new IloCplex();
         IloNumVar[] useTest = cplex.numVarArray(numTests, 0, 1, varType);
 
@@ -110,35 +163,40 @@ public class IPInstance {
 
 
         if (cplex.solve()) {
-            System.out.print("Used tests:");
-            for (int i = 0; i < numTests; i ++) {
-                if (cplex.getValue(useTest[i]) == 1) {
-                    System.out.print(" " + i);
-                }
+//            System.out.print("Used tests:");
+//            for (int i = 0; i < numTests; i ++) {
+//                if (cplex.getValue(useTest[i]) == 1) {
+//                    System.out.print(" " + i);
+//                }
+//            }
+//            System.out.println();
+//            System.out.print("Cost of tests:");
+//            for (int i = 0; i < numTests; i ++) {
+//                if (cplex.getValue(useTest[i]) == 1) {
+//                    System.out.print(" " + costOfTest[i]);
+//                }
+//            }
+//            System.out.println();
+//            for (int d1 = 0; d1 < numDiseases - 1; d1 ++) {
+//                for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
+//                    boolean differed = false;
+//                    for (int t = 0; t < numTests; t ++) {
+//                        if ((cplex.getValue(useTest[t]) == 1) && (A[t][d1] != A[t][d2])) {
+//                            differed = true;
+//                            System.out.println("Diseases " + d1 + " and " + d2 + " diff by test " + t);
+//                        }
+//                    }
+//                    if (!differed) {
+//                        System.out.println("Diseases " + d1 + " and " + d2 + " not differed :(");
+//                    }
+//                  }
+//            }
+            boolean isInteger = true;
+            for (int test = 0; test <= numTests; test ++) {
+                double testUsed = cplex.getValue(useTest[test]);
+                isInteger = isInteger && (testUsed == 0 || testUsed == 1);
             }
-            System.out.println();
-            System.out.print("Cost of tests:");
-            for (int i = 0; i < numTests; i ++) {
-                if (cplex.getValue(useTest[i]) == 1) {
-                    System.out.print(" " + costOfTest[i]);
-                }
-            }
-            System.out.println();
-            for (int d1 = 0; d1 < numDiseases - 1; d1 ++) {
-                for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
-                    boolean differed = false;
-                    for (int t = 0; t < numTests; t ++) {
-                        if ((cplex.getValue(useTest[t]) == 1) && (A[t][d1] != A[t][d2])) {
-                            differed = true;
-                            System.out.println("Diseases " + d1 + " and " + d2 + " diff by test " + t);
-                        }
-                    }
-                    if (!differed) {
-                        System.out.println("Diseases " + d1 + " and " + d2 + " not differed :(");
-                    }
-                }
-            }
-            return Optional.of(cplex.getObjValue());
+            return Optional.of(new SolveLinearReturn(cplex.getObjValue(), isInteger));
         } else {
             return Optional.empty();
         }

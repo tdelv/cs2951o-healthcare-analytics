@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c5b2ce29-8782-4b61-a634-2f68b0899b8a" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/project4.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cplex.jar" beforeDir="false" afterPath="$PROJECT_DIR$/cplex.jar" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -53,6 +53,7 @@
       <updated>1616090029216</updated>
       <workItem from="1616090031574" duration="599000" />
       <workItem from="1616090653855" duration="2667000" />
+      <workItem from="1616692379591" duration="2201000" />
     </task>
     <servers />
   </component>
