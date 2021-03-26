@@ -22,7 +22,7 @@ fi
 
 rm -f tmp
 ./runAll.sh input/ $timeout tmp $args
-grep -o "Result: \S* " tmp > tmp2
+grep -o "Time: \S* " tmp > tmp2
 grep -o -P -e "--|\d*\.\d*" tmp2 > tmp3
 cat tmp3 | sed "s/--/----/g" > tmp4
 cat tmp4 | tr '\n' ',' >> $table

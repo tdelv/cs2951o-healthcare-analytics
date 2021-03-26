@@ -3,10 +3,8 @@ package solver.ip;
 import ilog.cplex.*;
 import ilog.concert.*;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.IntStream;
 
 public class IPInstance {
     // IBM Ilog Cplex Solver
@@ -18,6 +16,8 @@ public class IPInstance {
     int[][] A;            // [numTests][numDiseases] 0/1 matrix if test is positive for disease
 
     Optional<Double> minCost;
+    int[] testOrder;
+    int [] orderedTestOrder;
 
     SolveType solveType = SolveType.solveFloat;
     IloNumVarType varType = IloNumVarType.Float;
@@ -70,10 +70,36 @@ public class IPInstance {
 
         Map<Integer, Boolean> setTests = new HashMap<Integer, Boolean>();
 
+        minCost = Optional.empty();
 
-        Optional<Double> solution = solveRecursive(setTests);
-        if (solution.isPresent()) {
-            return Optional.of((int) Math.ceil(solution.get()));
+        double[] numDiffer = new double[numTests];
+        for (int t = 0; t < numTests; t ++) {
+            for (int d1 = 0; d1 < numDiseases; d1 ++) {
+                for (int d2 = 0; d2 < numDiseases; d2 ++) {
+                    if (A[t][d1] != A[t][d2]) {
+                        numDiffer[t]++;
+                    }
+                }
+            }
+            numDiffer[t] = numDiffer[t]/costOfTest[t];
+        }
+//        testOrder = Collections.sort(Arrays.asList(IntStream.range(0, numTests).toArray()), (t1, t2) -> numDiffer[(int) t1] - numDiffer[(int) t2]);
+
+        int[] arrayTestOrder = new int[numTests];
+        for (int t = 0; t < numTests; t ++) {
+            arrayTestOrder[t] = t;
+        }
+
+//        int[] orderedTestOrder = Collections.sort(arrayTestOrder, (t1, t2) -> numDiffer[(int) t1] - numDiffer[(int) t2]);
+        orderedTestOrder = IntStream.range(0, numTests)
+                .boxed().sorted((i, j) -> (int) (numDiffer[j] - numDiffer[i]))
+                .mapToInt(ele -> ele).toArray();
+
+
+
+        solveRecursive(setTests);
+        if (minCost.isPresent()) {
+            return Optional.of((int) Math.ceil(minCost.get()));
         } else {
             return Optional.empty();
         }
@@ -88,7 +114,14 @@ public class IPInstance {
         // integer solution - check if we need to better or worse
         // infeasible
 
-        Optional<SolveLinearReturn> linearResult = this.solveLinear(setTests);
+//        Timer timer = new Timer();
+//        timer.start();
+//        timer.stop();
+//        if (timer.getTime() > 1) {
+//            System.out.println(timer.getTime());
+//        }
+
+        Optional<SolveLPReturn> linearResult = this.solveLP(setTests);
 
         // No best solution cost yet
         if (!minCost.isPresent()) {
@@ -110,8 +143,34 @@ public class IPInstance {
 
             }
             else {
-                if (linearResult.get().totalCost < minCost.get()) {
+                if (!minCost.isPresent() || linearResult.get().totalCost < minCost.get()) {
                     // keep going
+                    // set another variable
+                    int testChoice = -1;
+                    for (int i = 0; i < numTests; i ++) {
+                        int currTest = orderedTestOrder[i];
+                        if (!setTests.containsKey(currTest)) {
+                            testChoice = currTest;
+                            break;
+                        }
+                    }
+                    if (testChoice == -1) {
+                        System.err.println("No more tests to set!");
+                        System.exit(1);
+                    }
+
+                    Map<Integer, Boolean> trueMap, falseMap;
+                    trueMap = new HashMap<>(setTests);
+                    trueMap.put(testChoice, true);
+                    falseMap = new HashMap<>(setTests);
+                    falseMap.put(testChoice, false);
+
+                    this.solveRecursive(trueMap);
+
+                    this.solveRecursive(falseMap);
+
+
+
                 }
             }
         }
@@ -119,19 +178,24 @@ public class IPInstance {
         return;
     }
 
-    private class SolveLinearReturn {
+    public class SolveLPReturn {
         public double totalCost;
         public boolean isInteger;
 
-        public SolveLinearReturn(double totalCost, boolean isInteger) {
+        public SolveLPReturn(double totalCost, boolean isInteger) {
             this.totalCost = totalCost;
             this.isInteger = isInteger;
         }
     }
 
-    private Optional<SolveLinearReturn> solveLinear(Map<Integer, Boolean> setTests) throws IloException {
+    public Optional<SolveLPReturn> solveLP(Map<Integer, Boolean> setTests) throws IloException {
         IloCplex cplex = new IloCplex();
+        cplex.setOut(null);
         IloNumVar[] useTest = cplex.numVarArray(numTests, 0, 1, varType);
+
+        for (Integer test : setTests.keySet()) {
+            cplex.addEq(useTest[test], setTests.get(test) ? 1.0 : 0.0);
+        }
 
         /*
             For each pair of disease d1, d2:
@@ -192,11 +256,11 @@ public class IPInstance {
 //                  }
 //            }
             boolean isInteger = true;
-            for (int test = 0; test <= numTests; test ++) {
+            for (int test = 0; test < numTests; test ++) {
                 double testUsed = cplex.getValue(useTest[test]);
                 isInteger = isInteger && (testUsed == 0 || testUsed == 1);
             }
-            return Optional.of(new SolveLinearReturn(cplex.getObjValue(), isInteger));
+            return Optional.of(new SolveLPReturn(cplex.getObjValue(), isInteger));
         } else {
             return Optional.empty();
         }
@@ -224,3 +288,11 @@ public class IPInstance {
         return buf.toString();
     }
 }
+
+
+
+// turn into linear time for finding differences
+// while loop instead of recursion
+// copying vs recalculating
+// dynamically update
+// alternating high numbers vs low differences

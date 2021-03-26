@@ -46,7 +46,7 @@ do
 		echo Error
 		instance=$(basename "$f")		
 		instanceName="${instance%.*}"		
-		echo "Instance: $instanceName" >> $logFile	
+		echo "Instance: $instanceName Time: -- " >> $logFile
 	fi
 	rm -f output.tmp
 done
