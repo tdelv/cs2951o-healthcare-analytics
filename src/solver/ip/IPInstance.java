@@ -16,8 +16,33 @@ public class IPInstance {
     int[][] A;            // [numTests][numDiseases] 0/1 matrix if test is positive for disease
 
     Optional<Double> minCost;
+
+    Map<Integer, List<DiseasePair>> testDifferentiates;
+    Map<DiseasePair, List<Integer>> diseasesDifferentiatedBy;
+
     int[] testOrder;
     int [] orderedTestOrder;
+
+    private class DiseasePair {
+        public int d1, d2;
+        public DiseasePair(int d1, int d2) {
+            this.d1 = d1;
+            this.d2 = d2;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            DiseasePair that = (DiseasePair) o;
+            return d1 == that.d1 && d2 == that.d2;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(d1, d2);
+        }
+    }
 
     SolveType solveType = SolveType.solveFloat;
     IloNumVarType varType = IloNumVarType.Float;
@@ -72,25 +97,38 @@ public class IPInstance {
 
         minCost = Optional.empty();
 
-        double[] numDiffer = new double[numTests];
+        testDifferentiates = new HashMap<>();
+        diseasesDifferentiatedBy = new HashMap<>();
         for (int t = 0; t < numTests; t ++) {
-            for (int d1 = 0; d1 < numDiseases; d1 ++) {
-                for (int d2 = 0; d2 < numDiseases; d2 ++) {
+            testDifferentiates.put(t, new ArrayList<>());
+        }
+        for (int d1 = 0; d1 < numDiseases; d1 ++) {
+            for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
+                DiseasePair dp = new DiseasePair(d1, d2);
+                diseasesDifferentiatedBy.put(dp, new ArrayList<>());
+                for (int t = 0; t < numTests; t ++) {
                     if (A[t][d1] != A[t][d2]) {
-                        numDiffer[t]++;
+                        testDifferentiates.get(t).add(dp);
+                        diseasesDifferentiatedBy.get(dp).add(t);
                     }
                 }
             }
-            numDiffer[t] = numDiffer[t]/costOfTest[t];
         }
-//        testOrder = Collections.sort(Arrays.asList(IntStream.range(0, numTests).toArray()), (t1, t2) -> numDiffer[(int) t1] - numDiffer[(int) t2]);
 
-        int[] arrayTestOrder = new int[numTests];
+        double[] numDiffer = new double[numTests];
         for (int t = 0; t < numTests; t ++) {
-            arrayTestOrder[t] = t;
-        }
+            int posCount = 0, negCount = 0;
 
-//        int[] orderedTestOrder = Collections.sort(arrayTestOrder, (t1, t2) -> numDiffer[(int) t1] - numDiffer[(int) t2]);
+            for (int d = 0; d < numDiseases; d ++) {
+                if (A[t][d] == 1) {
+                    posCount ++;
+                } else {
+                    negCount ++;
+                }
+            }
+            numDiffer[t] = (posCount * negCount) / costOfTest[t];
+        }
+        
         orderedTestOrder = IntStream.range(0, numTests)
                 .boxed().sorted((i, j) -> (int) (numDiffer[j] - numDiffer[i]))
                 .mapToInt(ele -> ele).toArray();
@@ -146,6 +184,47 @@ public class IPInstance {
                 if (!minCost.isPresent() || linearResult.get().totalCost < minCost.get()) {
                     // keep going
                     // set another variable
+
+                    // WHERE WE DECIDE ON THE DISEASE TO SPLIT ON //
+
+//                    Timer timer = new Timer();
+//                    timer.start();
+//                    double[] numDiffer = new double[numTests];
+//                    for (int d1 = 0; d1 < numDiseases; d1 ++) {
+//                        for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
+//                            // Check if already differentiated
+//                            boolean alreadyDifferentiated = false;
+//                            for (int t : diseasesDifferentiatedBy.get(new DiseasePair(d1, d2))) {
+//                                if (setTests.containsKey(t)) {
+//                                    alreadyDifferentiated = true;
+//                                    break;
+//                                }
+//                            }
+//
+//                            if (alreadyDifferentiated) {
+//                                continue;
+//                            }
+//
+//                            // Update numDiffers if not
+//                            for (int t : diseasesDifferentiatedBy.get(new DiseasePair(d1, d2))) {
+//                                numDiffer[t] ++;
+//                            }
+//                        }
+//                    }
+//
+//                    for (int t = 0; t < numTests; t ++) {
+//                        numDiffer[t] /= costOfTest[t];
+//                    }
+//                    timer.stop();
+//                    if (timer.getTime() > 0.01) {
+//                        System.out.println(timer.getTime());
+//                    }
+//
+//                    orderedTestOrder = IntStream.range(0, numTests)
+//                            .boxed().sorted((i, j) -> (int) (numDiffer[j] - numDiffer[i]))
+//                            .mapToInt(ele -> ele).toArray();
+
+
                     int testChoice = -1;
                     for (int i = 0; i < numTests; i ++) {
                         int currTest = orderedTestOrder[i];
@@ -291,7 +370,7 @@ public class IPInstance {
 
 
 
-// turn into linear time for finding differences
+// turn into linear time for finding differences - check
 // while loop instead of recursion
 // copying vs recalculating
 // dynamically update

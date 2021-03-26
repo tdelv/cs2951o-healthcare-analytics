@@ -3,14 +3,11 @@
   <component name="ChangeListManager">
     <list default="true" id="c5b2ce29-8782-4b61-a634-2f68b0899b8a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runAll.sh" beforeDir="false" afterPath="$PROJECT_DIR$/runAll.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/runAll2.sh" beforeDir="false" afterPath="$PROJECT_DIR$/runAll2.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveLPReturn.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveLPReturn.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveType.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveType.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/solver/ip/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/Main.class" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/solver/ip/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -75,7 +72,7 @@
       <updated>1616090029216</updated>
       <workItem from="1616090031574" duration="599000" />
       <workItem from="1616090653855" duration="2667000" />
-      <workItem from="1616692379591" duration="16497000" />
+      <workItem from="1616692379591" duration="19792000" />
     </task>
     <servers />
   </component>
