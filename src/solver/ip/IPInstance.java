@@ -22,6 +22,9 @@ public class IPInstance {
 
     int[] testOrder;
     int [] orderedTestOrder;
+    Random rand = new Random(0);
+
+    int numPrune = 0, numInt = 0, numInfeasible = 0;
 
     private class DiseasePair {
         public int d1, d2;
@@ -46,6 +49,7 @@ public class IPInstance {
 
     SolveType solveType = SolveType.solveFloat;
     IloNumVarType varType = IloNumVarType.Float;
+    double probabilityUseTest = 0.3;
 
     enum SolveType {
         solveFloat,
@@ -114,24 +118,27 @@ public class IPInstance {
                 }
             }
         }
+//        System.out.println(diseasesDifferentiatedBy.get(new DiseasePair(0, 2)).contains(0));
 
-        double[] numDiffer = new double[numTests];
-        for (int t = 0; t < numTests; t ++) {
-            int posCount = 0, negCount = 0;
+        {
+            double[] numDiffer = new double[numTests];
+            for (int t = 0; t < numTests; t++) {
+                int posCount = 0, negCount = 0;
 
-            for (int d = 0; d < numDiseases; d ++) {
-                if (A[t][d] == 1) {
-                    posCount ++;
-                } else {
-                    negCount ++;
+                for (int d = 0; d < numDiseases; d++) {
+                    if (A[t][d] == 1) {
+                        posCount++;
+                    } else {
+                        negCount++;
+                    }
                 }
+                numDiffer[t] = (posCount * negCount) / costOfTest[t];
             }
-            numDiffer[t] = (posCount * negCount) / costOfTest[t];
+
+            orderedTestOrder = IntStream.range(0, numTests)
+                    .boxed().sorted((i, j) -> (int) (numDiffer[j] - numDiffer[i]))
+                    .mapToInt(ele -> ele).toArray();
         }
-        
-        orderedTestOrder = IntStream.range(0, numTests)
-                .boxed().sorted((i, j) -> (int) (numDiffer[j] - numDiffer[i]))
-                .mapToInt(ele -> ele).toArray();
 
 
 
@@ -167,6 +174,8 @@ public class IPInstance {
             if (linearResult.isPresent() && linearResult.get().isInteger) {
                 // Update best solution cost
                 minCost = Optional.of(linearResult.get().totalCost);
+                probabilityUseTest = linearResult.get().numTestsUsed / numTests;
+                System.out.println("Cost: " + minCost.get() + "; % Tests used: " + probabilityUseTest);
             }
         }
         // Found another miscellaneous solution
@@ -177,6 +186,8 @@ public class IPInstance {
                 if (linearResult.get().totalCost < minCost.get()) {
                     // Update best solution cost
                     minCost = Optional.of(linearResult.get().totalCost);
+                    probabilityUseTest = linearResult.get().numTestsUsed / numTests;
+                    System.out.println("Depth: " + setTests.size() + "; Integer soln " + ++numInt + "; Cost: " + minCost.get() + "; % Tests used: " + probabilityUseTest);
                 }
 
             }
@@ -187,71 +198,117 @@ public class IPInstance {
 
                     // WHERE WE DECIDE ON THE DISEASE TO SPLIT ON //
 
-//                    Timer timer = new Timer();
-//                    timer.start();
-//                    double[] numDiffer = new double[numTests];
-//                    for (int d1 = 0; d1 < numDiseases; d1 ++) {
-//                        for (int d2 = d1 + 1; d2 < numDiseases; d2 ++) {
-//                            // Check if already differentiated
-//                            boolean alreadyDifferentiated = false;
-//                            for (int t : diseasesDifferentiatedBy.get(new DiseasePair(d1, d2))) {
-//                                if (setTests.containsKey(t)) {
-//                                    alreadyDifferentiated = true;
-//                                    break;
+//                    {
+//                        double[] numDiffer = new double[numTests];
+//                        for (int d1 = 0; d1 < numDiseases; d1++) {
+//                            for (int d2 = d1 + 1; d2 < numDiseases; d2++) {
+//                                // Check if already differentiated
+//                                boolean alreadyDifferentiated = false;
+//                                for (int t : diseasesDifferentiatedBy.get(new DiseasePair(d1, d2))) {
+//                                    if (setTests.containsKey(t) && setTests.get(t) == true) {
+//                                        alreadyDifferentiated = true;
+//                                        break;
+//                                    }
+//                                }
+//
+//                                if (alreadyDifferentiated) {
+//                                    continue;
+//                                }
+//
+//                                // Update numDiffers if not
+//                                for (int t : diseasesDifferentiatedBy.get(new DiseasePair(d1, d2))) {
+//                                    numDiffer[t]++;
 //                                }
 //                            }
+//                        }
 //
-//                            if (alreadyDifferentiated) {
-//                                continue;
-//                            }
+//                        for (int t = 0; t < numTests; t++) {
+//                            numDiffer[t] /= costOfTest[t];
+//                        }
 //
-//                            // Update numDiffers if not
-//                            for (int t : diseasesDifferentiatedBy.get(new DiseasePair(d1, d2))) {
-//                                numDiffer[t] ++;
+//                        orderedTestOrder = IntStream.range(0, numTests)
+//                                .boxed().sorted((i, j) -> (int) (numDiffer[j] - numDiffer[i]))
+//                                .mapToInt(ele -> ele).toArray();
+//                    }
+
+                    {
+                        int testChoice = -1;
+                        for (int i = 0; i < numTests; i++) {
+                            int currTest = orderedTestOrder[i];
+                            if (!setTests.containsKey(currTest)) {
+                                testChoice = currTest;
+                                //break;
+                            }
+                        }
+                        if (testChoice == -1) {
+                            System.err.println("No more tests to set!");
+                            System.exit(1);
+                        }
+
+                        Map<Integer, Boolean> trueMap, falseMap;
+                        trueMap = new HashMap<>(setTests);
+                        trueMap.put(testChoice, true);
+                        falseMap = new HashMap<>(setTests);
+                        falseMap.put(testChoice, false);
+
+                        this.solveRecursive(falseMap);
+                        this.solveRecursive(trueMap);
+                    }
+
+//                    if (rand.nextDouble() < probabilityUseTest) {
+//                        int testChoice = -1;
+//                        for (int i = 0; i < numTests; i++) {
+//                            int currTest = orderedTestOrder[i];
+//                            if (!setTests.containsKey(currTest)) {
+//                                testChoice = currTest;
+//                                break;
 //                            }
 //                        }
-//                    }
+//                        if (testChoice == -1) {
+//                            System.err.println("No more tests to set!");
+//                            System.exit(1);
+//                        }
 //
-//                    for (int t = 0; t < numTests; t ++) {
-//                        numDiffer[t] /= costOfTest[t];
-//                    }
-//                    timer.stop();
-//                    if (timer.getTime() > 0.01) {
-//                        System.out.println(timer.getTime());
-//                    }
+//                        Map<Integer, Boolean> trueMap, falseMap;
+//                        trueMap = new HashMap<>(setTests);
+//                        trueMap.put(testChoice, true);
+//                        falseMap = new HashMap<>(setTests);
+//                        falseMap.put(testChoice, false);
 //
-//                    orderedTestOrder = IntStream.range(0, numTests)
-//                            .boxed().sorted((i, j) -> (int) (numDiffer[j] - numDiffer[i]))
-//                            .mapToInt(ele -> ele).toArray();
-
-
-                    int testChoice = -1;
-                    for (int i = 0; i < numTests; i ++) {
-                        int currTest = orderedTestOrder[i];
-                        if (!setTests.containsKey(currTest)) {
-                            testChoice = currTest;
-                            break;
-                        }
-                    }
-                    if (testChoice == -1) {
-                        System.err.println("No more tests to set!");
-                        System.exit(1);
-                    }
-
-                    Map<Integer, Boolean> trueMap, falseMap;
-                    trueMap = new HashMap<>(setTests);
-                    trueMap.put(testChoice, true);
-                    falseMap = new HashMap<>(setTests);
-                    falseMap.put(testChoice, false);
-
-                    this.solveRecursive(trueMap);
-
-                    this.solveRecursive(falseMap);
+//                        this.solveRecursive(trueMap);
+//                        this.solveRecursive(falseMap);
+//                    } else {
+//                        int testChoice = -1;
+//                        for (int i = 0; i < numTests; i ++) {
+//                            int currTest = orderedTestOrder[i];
+//                            if (!setTests.containsKey(currTest)) {
+//                                testChoice = currTest;
+//                                //break;
+//                            }
+//                        }
+//                        if (testChoice == -1) {
+//                            System.err.println("No more tests to set!");
+//                            System.exit(1);
+//                        }
+//
+//                        Map<Integer, Boolean> trueMap, falseMap;
+//                        trueMap = new HashMap<>(setTests);
+//                        trueMap.put(testChoice, true);
+//                        falseMap = new HashMap<>(setTests);
+//                        falseMap.put(testChoice, false);
+//
+//                        this.solveRecursive(falseMap);
+//                        this.solveRecursive(trueMap);
+//                    }
 
 
 
+                } else {
+                    System.out.println("Depth: " + setTests.size() + "; Prune");
                 }
             }
+        } else {
+            System.out.println("Depth: " + setTests.size() + "; Infeasible");
         }
 
         return;
@@ -260,10 +317,12 @@ public class IPInstance {
     public class SolveLPReturn {
         public double totalCost;
         public boolean isInteger;
+        public double numTestsUsed;
 
-        public SolveLPReturn(double totalCost, boolean isInteger) {
+        public SolveLPReturn(double totalCost, boolean isInteger, double numTestsUsed) {
             this.totalCost = totalCost;
             this.isInteger = isInteger;
+            this.numTestsUsed = numTestsUsed;
         }
     }
 
@@ -334,13 +393,18 @@ public class IPInstance {
 //                    }
 //                  }
 //            }
+            double objValue = cplex.getObjValue();
             boolean isInteger = true;
+            double numTestsUsed = 0;
             for (int test = 0; test < numTests; test ++) {
                 double testUsed = cplex.getValue(useTest[test]);
                 isInteger = isInteger && (testUsed == 0 || testUsed == 1);
+                numTestsUsed += testUsed;
             }
-            return Optional.of(new SolveLPReturn(cplex.getObjValue(), isInteger));
+            cplex.close();
+            return Optional.of(new SolveLPReturn(objValue, isInteger, numTestsUsed));
         } else {
+            cplex.close();
             return Optional.empty();
         }
     }

@@ -4,10 +4,15 @@
     <list default="true" id="c5b2ce29-8782-4b61-a634-2f68b0899b8a" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance$DiseasePair.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance$DiseasePair.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveLPReturn.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveLPReturn.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveType.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance$SolveType.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance.class" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/solver/ip/IPInstance.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/IPInstance.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/solver/ip/Main$1.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/Main$1.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/solver/ip/Main.class" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/Main.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/solver/ip/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/solver/ip/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/table.csv" beforeDir="false" afterPath="$PROJECT_DIR$/table.csv" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,6 +36,7 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
@@ -47,21 +53,6 @@
     <property name="project.structure.proportion" value="0.0" />
     <property name="project.structure.side.proportion" value="0.0" />
   </component>
-  <component name="RunManager">
-    <configuration default="true" type="ArquillianTestNG" factoryName="" nameIsGenerated="true">
-      <option name="arquillianRunConfiguration">
-        <value>
-          <option name="containerStateName" value="" />
-        </value>
-      </option>
-      <option name="TEST_OBJECT" value="CLASS" />
-      <properties />
-      <listeners />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -72,7 +63,8 @@
       <updated>1616090029216</updated>
       <workItem from="1616090031574" duration="599000" />
       <workItem from="1616090653855" duration="2667000" />
-      <workItem from="1616692379591" duration="19792000" />
+      <workItem from="1616692379591" duration="20326000" />
+      <workItem from="1616876672942" duration="6827000" />
     </task>
     <servers />
   </component>

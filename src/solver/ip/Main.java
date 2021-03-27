@@ -36,6 +36,7 @@ public class Main {
 //        }
 
         try {
+            System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
             switch (instance.solveType) {
                 case solveFloat: {
                     Optional<Integer> solution = instance.solve();
