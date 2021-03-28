@@ -50,6 +50,9 @@ public class IPInstance {
     SolveType solveType = SolveType.solveFloat;
     IloNumVarType varType = IloNumVarType.Float;
     double probabilityUseTest = 0.3;
+    double choiceFadeoff = 0.8;
+    double randRestart = 0.00;
+    double randRestartFadeoff = 0.9;
 
     enum SolveType {
         solveFloat,
@@ -96,7 +99,8 @@ public class IPInstance {
         /*
             Setup recursion here!
          */
-
+        Timer setupTimer = new Timer();
+        setupTimer.start();
         Map<Integer, Boolean> setTests = new HashMap<Integer, Boolean>();
 
         minCost = Optional.empty();
@@ -132,7 +136,7 @@ public class IPInstance {
                         negCount++;
                     }
                 }
-                numDiffer[t] = (posCount * negCount) / costOfTest[t];
+                numDiffer[t] = (posCount * negCount) / Math.pow(costOfTest[t], 2);
             }
 
             orderedTestOrder = IntStream.range(0, numTests)
@@ -141,7 +145,8 @@ public class IPInstance {
         }
 
 
-
+        setupTimer.stop();
+        System.out.println("Setup time: " + setupTimer.getTime());
         solveRecursive(setTests);
         if (minCost.isPresent()) {
             return Optional.of((int) Math.ceil(minCost.get()));
@@ -231,12 +236,28 @@ public class IPInstance {
 //                                .mapToInt(ele -> ele).toArray();
 //                    }
 
+                    if (rand.nextDouble() < randRestart) {
+                        randRestart *= randRestartFadeoff;
+                        solveRecursive(new HashMap<>());
+                        if (minCost.isPresent()) {
+                            Main.printAndExit(Optional.of((int) Math.ceil(minCost.get())));
+                        } else {
+                            Main.printAndExit(Optional.empty());
+                        }
+
+                    }
+
                     {
                         int testChoice = -1;
                         for (int i = 0; i < numTests; i++) {
                             int currTest = orderedTestOrder[i];
                             if (!setTests.containsKey(currTest)) {
-                                testChoice = currTest;
+                                if (testChoice == -1) {
+                                    testChoice = currTest;
+                                } else if (rand.nextDouble() < choiceFadeoff) {
+                                    testChoice = currTest;
+                                }
+
                                 //break;
                             }
                         }
@@ -304,11 +325,11 @@ public class IPInstance {
 
 
                 } else {
-                    System.out.println("Depth: " + setTests.size() + "; Prune");
+                    System.out.println("Depth: " + setTests.size() + "; Prune " + ++numPrune);
                 }
             }
         } else {
-            System.out.println("Depth: " + setTests.size() + "; Infeasible");
+            System.out.println("Depth: " + setTests.size() + "; Infeasible " + ++numInfeasible);
         }
 
         return;

@@ -9,6 +9,10 @@ import java.util.HashMap;
 import java.util.Optional;
 
 public class Main {
+
+    private static String filename;
+    private static Timer watch;
+
     public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Usage: java Main <file>");
@@ -20,8 +24,10 @@ public class Main {
         String input = args[0];
         Path path = Paths.get(input);
         String filename = path.getFileName().toString();
+        Main.filename = filename;
 
         Timer watch = new Timer();
+        Main.watch = watch;
         watch.start();
         IPInstance instance = DataParser.parseIPFile(input);
 
@@ -53,10 +59,11 @@ public class Main {
                 case solveInt: {
                     instance.varType = IloNumVarType.Int;
                     Optional<IPInstance.SolveLPReturn> solution = instance.solveLP(new HashMap<>());
+                    watch.stop();
                     if (solution.isPresent()) {
-                        System.out.println("Integer problem found " + solution.get().totalCost);
+                        System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: " + solution.get().totalCost + " Solution: OPT");
                     } else {
-                        System.out.println("Integer problem infeasible.");
+                        System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: --" + " Solution: FAIL");
                     }
                     break;
                 }
@@ -68,5 +75,15 @@ public class Main {
         } catch (IloException e) {
             System.out.println("Error: " + e.getMessage());
         }
+    }
+
+    public static void printAndExit(Optional<Integer> solution) {
+        if (solution.isPresent()) {
+            System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: " + solution.get() + " Solution: OPT");
+        } else {
+            System.out.println("Instance: " + filename + " Time: " + String.format("%.2f", watch.getTime()) + " Result: --" + " Solution: FAIL");
+        }
+
+        System.exit(0);
     }
 }
