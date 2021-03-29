@@ -17,7 +17,6 @@ import java.util.Scanner;
  */
 public class DataParser {
     public static IPInstance parseIPFile(String fileName) {
-        IPInstance instance = new IPInstance();
         try {
             Scanner read = new Scanner(new File(fileName));
 
@@ -34,10 +33,13 @@ public class DataParser {
                     A[i][j] = read.nextInt();
 
             // Initialize the instance
-            instance.init(numTests, numDiseases, costOfTest, A);
+            return new IPInstance(numTests, numDiseases, costOfTest, A);
         } catch (FileNotFoundException e) {
-            System.out.println("Error: file not found " + fileName);
+            System.err.println("Error: file not found " + fileName);
+            System.exit(1);
+            return null;
         }
-        return instance;
+
+
     }
 }
